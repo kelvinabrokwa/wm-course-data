@@ -49,7 +49,10 @@ def main():
             a = cell.find('a')
             col['crn'] = a.contents[0]
         elif c == 2:
-            col['courseId'] = cell.contents[0]
+            info = cell.contents[0].split(' ')
+            col['department'] = info[0]
+            col['courseId'] = info[1]
+            col['section'] = info[2]
         elif c == 3:
             col['attr'] = cell.contents[0]
         elif c == 4:

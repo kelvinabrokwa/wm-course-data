@@ -10,7 +10,7 @@ cd wm-course-data
 python course-data.py
 ```
 
-**Output** a JSON array of courses printed to stdout
+**Output:** a JSON array of courses printed to stdout
 
 Sample output:
 
