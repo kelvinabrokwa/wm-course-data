@@ -75,7 +75,17 @@ def main():
             data.append(col)
             col = {}
 
-    print(json.dumps(data))
+    out = {}
+
+    for course in data:
+        dept = course['department']
+
+        if dept not in out:
+            out[dept] = [{'courseId': 'general'}]
+
+        out[dept].append(course)
+
+    print(json.dumps(out))
 
 if __name__ == '__main__':
     main()
