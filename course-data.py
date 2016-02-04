@@ -45,32 +45,32 @@ def main():
     cells = soup.find('tbody').find_all('td')
     for cell in cells:
         c += 1
-        if c == 1:
-            a = cell.find('a')
-            col['crn'] = a.contents[0]
-        elif c == 2:
+        #if c == 1:
+        #    a = cell.find('a')
+        #    col['crn'] = a.contents[0]
+        if c == 2:
             info = cell.contents[0].split(' ')
             col['department'] = info[0]
             col['courseId'] = info[1]
             col['section'] = info[2]
-        elif c == 3:
-            col['attr'] = cell.contents[0]
+        #elif c == 3:
+        #    col['attr'] = cell.contents[0]
         elif c == 4:
             col['title'] = cell.contents[0]
-        elif c == 5:
-            col['instructor'] = cell.contents[0]
-        elif c == 6:
-            col['creditHours'] = cell.contents[0]
-        elif c == 7:
-            col['meetDays'] = cell.contents[0]
-        elif c == 8:
-            col['meetTimes'] = cell.contents[0]
-        elif c == 10:
-            col['currEnr'] = cell.contents[0]
-        elif c == 11:
-            col['seatsAvail'] = cell.contents[0]
+        #elif c == 5:
+        #    col['instructor'] = cell.contents[0]
+        #elif c == 6:
+        #    col['creditHours'] = cell.contents[0]
+        #elif c == 7:
+        #    col['meetDays'] = cell.contents[0]
+        #elif c == 8:
+        #    col['meetTimes'] = cell.contents[0]
+        #elif c == 10:
+        #    col['currEnr'] = cell.contents[0]
+        #elif c == 11:
+        #    col['seatsAvail'] = cell.contents[0]
         elif c == 12:
-            col['status'] = cell.contents[0]
+            #col['status'] = cell.contents[0]
             c = 0
             data.append(col)
             col = {}
