@@ -14,14 +14,14 @@ course_list_url = 'https://courselist.wm.edu/courselist/courseinfo/searchresults
 
 def main() -> List[Dict[str, Any]]:
     r = requests.get(course_list_home_url)
-    soup = BeautifulSoup(r.text, 'html.parser')
-    terms = list_terms(soup)
+    home_soup = BeautifulSoup(r.text, 'html.parser')
+    terms = list_terms(home_soup)
     out = {}
     for term_name, term_code in terms.items():
         print('fetching term: {}'.format(term_name), file=sys.stderr)
         print('---------------------------', file=sys.stderr)
         out[term_name] = {}
-        subjects = list_subjects(soup)
+        subjects = list_subjects(home_soup)
         for subject in subjects:
             print(subject['subject_name'], file=sys.stderr)
             out[term_name][subject['subject_name']] = {}
