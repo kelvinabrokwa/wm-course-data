@@ -1,91 +1,76 @@
-import urllib
-import urllib2
+#!/usr/bin/env bin
+import re
+from typing import List, Dict, Any
+import requests
 from bs4 import BeautifulSoup
-import json
-import sys
 
-semesters = {
-    'spring2016': 201620
-}
 
-def main():
-    term_code = semesters['spring2016'] # default to spring 2016
+course_list_home_url = 'https://courselist.wm.edu/courselist'
+course_list_url = 'https://courselist.wm.edu/courselist/courseinfo/searchresults?term_code=201710&term_subj={}&attr=0&attr2=0&levl=0&status=0&ptrm=0&search=Search'
 
-    if len(sys.argv) > 1:
-        if sys.argv[1] not in semesters:
-            print('Semesters not available')
-            return
+
+def main() -> List[Dict[str, Any]]:
+    r = requests.get(course_list_home_url)
+    soup = BeautifulSoup(r.text, 'html.parser')
+    subjects = list_subjects(soup)
+    out = []
+    for subject in subjects[:1]:
+        url = course_list_url.format(subject)
+        r = requests.get(url)
+        soup = BeautifulSoup(normalize_markup(r.text), 'html.parser')
+        table = find_result_table(soup)
+        columns = get_column_names(table)
+        out += parse_table(table, columns)
+    return out
+
+
+def normalize_markup(html: str) -> str:
+    html = re.sub(r'<tbody>\s*<td>', '<tbody><tr><td>', html)
+    html = re.sub(r'</tr>\s*<td>', '</tr><tr><td>', html)
+    return html
+
+
+def get_column_names(table: BeautifulSoup) -> List[str]:
+    out = []
+    header = table.find('thead').find('tr')
+    for column in header.find_all('th'):
+        if 'class' in column.attrs and 'sortable' in column.attrs['class']:
+            out.append(column.find('a').string)
         else:
-            term_code = sys.argv[1]
+            out.append(column.string)
+    return out
 
-    FORM_DATA = {
-        'term_code': 201620,
-        'term_subj': 0,
-        'attr': 0,
-        'attr2': 0,
-        'levl': 0,
-        'status': 0,
-        'ptrm': 0,
-        'search': 'Search'
-    }
 
-    URL = 'https://courselist.wm.edu/courselist/courseinfo/searchresults'
+def parse_table(table: BeautifulSoup, columns: List[str]) -> List[Dict[str, str]]:
+    out = []
+    tbody = table.find('tbody')
+    for row in tbody.find_all('tr'):
+        data = {}
+        for i, entry in enumerate(row.find_all('td')):
+            col = columns[i]
+            data[col] = entry.string
+        out.append(data)
+    return out
 
-    data = urllib.urlencode(FORM_DATA)
-    req = urllib2.Request(URL, data)
-    response = urllib2.urlopen(req)
-    html = response.read()
 
-    html = html.replace('</tr>', '')
-    soup = BeautifulSoup(html, 'html.parser')
+def find_result_table(soup: BeautifulSoup) -> BeautifulSoup:
+    return soup.find('table')
 
-    data = []
-    c = 0
-    col = {}
-    cells = soup.find('tbody').find_all('td')
-    for cell in cells:
-        c += 1
-        #if c == 1:
-        #    a = cell.find('a')
-        #    col['crn'] = a.contents[0]
-        if c == 2:
-            info = cell.contents[0].split(' ')
-            col['department'] = info[0]
-            col['courseId'] = info[1]
-            col['section'] = info[2]
-        #elif c == 3:
-        #    col['attr'] = cell.contents[0]
-        elif c == 4:
-            col['title'] = cell.contents[0]
-        #elif c == 5:
-        #    col['instructor'] = cell.contents[0]
-        #elif c == 6:
-        #    col['creditHours'] = cell.contents[0]
-        #elif c == 7:
-        #    col['meetDays'] = cell.contents[0]
-        #elif c == 8:
-        #    col['meetTimes'] = cell.contents[0]
-        #elif c == 10:
-        #    col['currEnr'] = cell.contents[0]
-        #elif c == 11:
-        #    col['seatsAvail'] = cell.contents[0]
-        elif c == 12:
-            #col['status'] = cell.contents[0]
-            c = 0
-            data.append(col)
-            col = {}
 
-    out = {}
+def list_subjects(soup: BeautifulSoup) -> List[str]:
+    out = []
+    form_divs = soup.find_all('div', {'class': 'phoneHeader'})
+    for field in form_divs:
+        if field.find('p1').string == 'Subject':
+            select = field.find('select')
+            options = select.find_all('option')
+            for option in options[1:]:
+                out.append(option.attrs['value'])
+            break
 
-    for course in data:
-        dept = course['department']
+    return out
 
-        if dept not in out:
-            out[dept] = [{'courseId': 'general'}]
-
-        out[dept].append(course)
-
-    print(json.dumps(out))
 
 if __name__ == '__main__':
-    main()
+    classes = main()
+    print(classes)
