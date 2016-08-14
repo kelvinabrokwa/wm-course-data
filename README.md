@@ -19,14 +19,28 @@ make
 sudo make install
 ```
 
+- Node.js
+
+```sh
+curl -sL https://deb.nodesource.com/setup_4.x | sudo -E bash -
+sudo apt-get install -y nodejs
+```
 
 ### Usage
 
-```
+To scrape course data:
+
+```sh
 git clone git@github.com:kelvinabrokwa/wm-course-data.git
 cd wm-course-data
 pip install -r requirements.txt
 ./course-data.py
+```
+
+To start the service:
+
+```sh
+npm start
 ```
 
 
