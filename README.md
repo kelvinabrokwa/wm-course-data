@@ -19,6 +19,12 @@ make
 sudo make install
 ```
 
+- Virtualenv
+
+```sh
+pip install virtualenv
+```
+
 - Node.js
 
 ```sh
@@ -31,8 +37,10 @@ sudo apt-get install -y nodejs
 To scrape course data:
 
 ```sh
-git clone git@github.com:kelvinabrokwa/wm-course-data.git
-cd wm-course-data
+git clone git@github.com:kelvinabrokwa/wm-course-data.git /opt/
+cd /opt/wm-course-data
+virtualenv -p python3.5 env
+source env/bin/activate
 pip install -r requirements.txt
 ./course-data.py
 ```
@@ -40,6 +48,7 @@ pip install -r requirements.txt
 To start the service:
 
 ```sh
+npm install
 npm start
 ```
 

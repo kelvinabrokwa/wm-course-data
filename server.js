@@ -19,7 +19,7 @@ app.get('/courses', (req, res) => {
 });
 
 app.post('/courses/refresh', (req, res) => {
-  exec('./course_data.py > /opt/course_data.json', (err, stdout, stderr) => {
+  exec('/opt/wm-course-data/env/bin/python /opt/wm-course-data/course-data.py > /opt/course_data.json', (err, stdout, stderr) => {
     if (err) {
       console.log(err);
       res.send({ error: 'error scraping course data' });
@@ -34,4 +34,3 @@ app.post('/courses/refresh', (req, res) => {
 app.listen(80, () => {
   console.log('Courses service listening at port: ' + '80');
 });
-
