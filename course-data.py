@@ -1,26 +1,38 @@
-#!/usr/bin/env bin
+#!/usr/bin/env python
 import re
+import json
 from typing import List, Dict, Any
 import requests
 from bs4 import BeautifulSoup
 
 
 course_list_home_url = 'https://courselist.wm.edu/courselist'
-course_list_url = 'https://courselist.wm.edu/courselist/courseinfo/searchresults?term_code=201710&term_subj={}&attr=0&attr2=0&levl=0&status=0&ptrm=0&search=Search'
+course_list_url = 'https://courselist.wm.edu/courselist/courseinfo/searchresults?term_code={term_code}&' +\
+                  'term_subj={subject}&attr=0&attr2=0&levl=0&status=0&ptrm=0&search=Search'
 
 
 def main() -> List[Dict[str, Any]]:
     r = requests.get(course_list_home_url)
     soup = BeautifulSoup(r.text, 'html.parser')
-    subjects = list_subjects(soup)
-    out = []
-    for subject in subjects[:1]:
-        url = course_list_url.format(subject)
-        r = requests.get(url)
-        soup = BeautifulSoup(normalize_markup(r.text), 'html.parser')
-        table = find_result_table(soup)
-        columns = get_column_names(table)
-        out += parse_table(table, columns)
+    terms = list_terms(soup)
+    out = {}
+    for term_name, term_code in terms.items():
+        out[term_name] = {}
+        subjects = list_subjects(soup)
+        for subject in subjects:
+            out[term_name][subject['subject_name']] = {}
+            url = course_list_url.format(term_code=term_code, subject=subject['subject_id'])
+            r = requests.get(url)
+            soup = BeautifulSoup(normalize_markup(r.text), 'html.parser')
+            table = find_result_table(soup)
+            columns = get_column_names(table)
+            courses = parse_table(table, columns)
+            for course in courses:
+                subj, level, section, _ = course['COURSE ID'].split(' ')
+                if level in out[term_name][subject['subject_name']]:
+                    out[term_name][subject['subject_name']][level][section] = course
+                else:
+                    out[term_name][subject['subject_name']][level] = {section: course}
     return out
 
 
@@ -57,7 +69,7 @@ def find_result_table(soup: BeautifulSoup) -> BeautifulSoup:
     return soup.find('table')
 
 
-def list_subjects(soup: BeautifulSoup) -> List[str]:
+def list_subjects(soup: BeautifulSoup) -> List[Dict[str, str]]:
     out = []
     form_divs = soup.find_all('div', {'class': 'phoneHeader'})
     for field in form_divs:
@@ -65,12 +77,28 @@ def list_subjects(soup: BeautifulSoup) -> List[str]:
             select = field.find('select')
             options = select.find_all('option')
             for option in options[1:]:
-                out.append(option.attrs['value'])
+                out.append({
+                    'subject_name': option.string,
+                    'subject_id': option.attrs['value']
+                })
             break
 
     return out
 
 
+def list_terms(soup: BeautifulSoup) -> Dict[str, str]:
+    out = {}
+    form_divs = soup.find_all('div', {'class': 'phoneHeader'})
+    for field in form_divs:
+        if field.find('p1').string == 'Term':
+            select = field.find('select')
+            options = select.find_all('option')
+            for option in options:
+                out[option.string] = option.attrs['value']
+            break
+    return out
+
+
 if __name__ == '__main__':
     classes = main()
-    print(classes)
+    print(json.dumps(classes))
