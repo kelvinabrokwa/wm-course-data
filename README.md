@@ -7,6 +7,18 @@ Download all course data available on the [W&M Open Course List](https://coursel
 
 - Python 3.5
 
+Installing on Ubuntu
+
+```sh
+sudo apt-get install libssl-dev openssl -y
+wget https://www.python.org/ftp/python/3.5.0/Python-3.5.0.tgz
+tar xzvf Python-3.5.0.tgz
+cd Python-3.5.0
+./configure
+make
+sudo make install
+```
+
 
 ### Usage
 

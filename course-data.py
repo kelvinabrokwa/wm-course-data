@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import sys
 import re
 import json
 from typing import List, Dict, Any
@@ -17,9 +18,12 @@ def main() -> List[Dict[str, Any]]:
     terms = list_terms(soup)
     out = {}
     for term_name, term_code in terms.items():
+        print('fetching term: {}'.format(term_name), file=sys.stderr)
+        print('---------------------------', file=sys.stderr)
         out[term_name] = {}
         subjects = list_subjects(soup)
         for subject in subjects:
+            print(subject['subject_name'], file=sys.stderr)
             out[term_name][subject['subject_name']] = {}
             url = course_list_url.format(term_code=term_code, subject=subject['subject_id'])
             r = requests.get(url)
