@@ -1,6 +1,6 @@
 # wm-course-data
 
-Download all course data available on the [W&M Open Course List](https://courselist.wm.edu/courselist) as well structured JSON.
+A microservice and library for fetching all course data available on the [William and Mary Open Course List](https://courselist.wm.edu/courselist) as well structured JSON.
 
 
 ### Dependencies

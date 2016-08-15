@@ -2,6 +2,7 @@
 import sys
 import re
 import json
+from datetime import datetime
 from typing import List, Dict, Any
 import requests
 from bs4 import BeautifulSoup
@@ -12,7 +13,7 @@ course_list_url = 'https://courselist.wm.edu/courselist/courseinfo/searchresults
                   'term_subj={subject}&attr=0&attr2=0&levl=0&status=0&ptrm=0&search=Search'
 
 
-def main() -> List[Dict[str, Any]]:
+def main() -> Dict[str, Any]:
     r = requests.get(course_list_home_url)
     home_soup = BeautifulSoup(r.text, 'html.parser')
     terms = list_terms(home_soup)
@@ -32,7 +33,19 @@ def main() -> List[Dict[str, Any]]:
             columns = get_column_names(table)
             courses = parse_table(table, columns)
             for course in courses:
+                course['MEET DAYS'] = list(filter(lambda x: x.strip(), list(course['MEET DAYS'])))
+                course['CRSE ATTR'] = list(map(lambda x: x.strip(), course[' CRSE ATTR'].split(',')))
+                del course[' CRSE ATTR']
+                if course['MEET TIMES'].strip():
+                    start, end = course['MEET TIMES'].split('-')
+                    start_time = datetime(1, 1, 1, int(start[:2]), int(start[2:]))
+                    end_time = datetime(1, 1, 1, int(end[:2]), int(end[2:]))
+                    course['startTime'] = (start_time - datetime(1, 1, 1)).seconds * 1000
+                    course['endTime'] = (end_time - datetime(1, 1, 1)).seconds * 1000
                 subj, level, section, _ = course['COURSE ID'].split(' ')
+                course['dept'] = subj
+                course['level'] = level
+                course['section'] = section
                 if level in out[term_name][subject['subject_name']]:
                     out[term_name][subject['subject_name']][level][section] = course
                 else:
@@ -64,7 +77,10 @@ def parse_table(table: BeautifulSoup, columns: List[str]) -> List[Dict[str, str]
         data = {}
         for i, entry in enumerate(row.find_all('td')):
             col = columns[i]
-            data[col] = entry.string
+            if entry.find('a'):
+                data[col] = entry.find('a').string
+            else:
+                data[col] = entry.string
         out.append(data)
     return out
 
