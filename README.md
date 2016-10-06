@@ -2,6 +2,8 @@
 
 A microservice and library for fetching all course data available on the [William and Mary Open Course List](https://courselist.wm.edu/courselist) as well structured JSON.
 
+Built for [Heroku](https://heroku.com/)
+
 
 ### Dependencies
 
@@ -19,22 +21,13 @@ make
 sudo make install
 ```
 
-- Virtualenv
+- Redis
 
-```sh
-pip install virtualenv
-```
-
-- Node.js
-
-```sh
-curl -sL https://deb.nodesource.com/setup_4.x | sudo -E bash -
-sudo apt-get install -y nodejs
-```
+Make sure to set the `REDIS_URL` environment variable 
 
 ### Usage
 
-To scrape course data:
+To scrape course data from the command line:
 
 ```sh
 git clone git@github.com:kelvinabrokwa/wm-course-data.git /opt/
@@ -48,14 +41,13 @@ pip install -r requirements.txt
 To start the service:
 
 ```sh
-npm install
-npm start
+gunicorn server:app --timeout 120 # timeout gives worker enough time to scrape data
 ```
+
+Course data will be available at `/courses`
 
 
 **Output:** a JSON object of courses printed to stdout
-
-Sample output:
 
 ```js
 {
