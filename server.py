@@ -3,9 +3,11 @@ import sys
 sys.path.append('.')
 import json
 from flask import Flask
+from flask_cors import CORS, cross_origin
 from course_data import get_course_data
 
 app = Flask(__name__)
+CORS(app)
 
 courses = None
 
