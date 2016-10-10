@@ -5,13 +5,15 @@ import os
 import json
 import redis
 from flask import Flask
-from flask_cors import CORS, cross_origin
+from flask_cors import CORS
+from flask_compress import Compress
 from course_data import get_course_data
 
 
 # Flask app
 app = Flask(__name__)
 CORS(app)
+Compress(app)
 
 # Redis
 r = redis.from_url(os.environ.get("REDIS_URL"))

@@ -47,7 +47,7 @@ gunicorn server:app --timeout 120 # timeout gives worker enough time to scrape d
 Course data will be available at `/courses`
 
 
-**Output:** a JSON object of courses printed to stdout
+**Output:** a JSON object of courses
 
 ```js
 {
