@@ -33,6 +33,7 @@ def get_course_data() -> Dict[str, Any]:
             columns = get_column_names(table)
             courses = parse_table(table, columns)
             for course in courses:
+                course['department'] = subject['subject_name']
                 course['MEET DAYS'] = list(filter(lambda x: x.strip(), list(course['MEET DAYS'])))
                 course['CRSE ATTR'] = list(map(lambda x: x.strip(), course[' CRSE ATTR'].split(',')))
                 del course[' CRSE ATTR']

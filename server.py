@@ -15,10 +15,12 @@ app = Flask(__name__)
 CORS(app)
 Compress(app)
 
+
 # Redis
 r = redis.from_url(os.environ.get("REDIS_URL"))
 
 if r.get('courses') is None:
+    print('Fetching courses...')
     r.set('courses', json.dumps(get_course_data()))
 
 @app.route('/courses')
