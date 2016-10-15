@@ -48,7 +48,17 @@ def get_course_data() -> Dict[str, Any]:
                 course['level'] = level
                 course['section'] = section
                 if level in out[term_name][subject['subject_name']]:
-                    out[term_name][subject['subject_name']][level][section] = course
+                    # some sections have multiple entries in the table
+                    # due to irregular meet times or class lengths
+                    # whenever we come across such an entry,
+                    # add it into an `other_meetings` array
+                    if section in out[term_name][subject['subject_name']][level]:
+                        if 'other_meetings' in out[term_name][subject['subject_name']][level][section]:
+                            out[term_name][subject['subject_name']][level][section]['other_meetings'].append(course)
+                        else:
+                            out[term_name][subject['subject_name']][level][section]['other_meetings'] = [course]
+                    else:
+                        out[term_name][subject['subject_name']][level][section] = course
                 else:
                     out[term_name][subject['subject_name']][level] = {section: course}
     return out
