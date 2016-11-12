@@ -34,11 +34,16 @@ def get_course_data() -> Dict[str, Any]:
             courses = parse_table(table, columns)
             for course in courses:
                 course['department'] = subject['subject_name']
-                course['MEET DAYS'] = list(filter(lambda x: x.strip(), list(course['MEET DAYS'])))
+                meet_days_time = course[' MEET DAY:TIME'].split(':')
+                if len(meet_days_time) == 2:
+                    meet_days, meet_time = meet_days_time
+                else:
+                    meet_days, meet_time = '', ''
+                course['MEET DAYS'] = list(filter(lambda x: x.strip(), list(meet_days)))
                 course['CRSE ATTR'] = list(map(lambda x: x.strip(), course[' CRSE ATTR'].split(',')))
                 del course[' CRSE ATTR']
-                if course['MEET TIMES'].strip():
-                    start, end = course['MEET TIMES'].split('-')
+                if meet_time.strip():
+                    start, end = meet_time.split('-')
                     start_time = datetime(1, 1, 1, int(start[:2]), int(start[2:]))
                     end_time = datetime(1, 1, 1, int(end[:2]), int(end[2:]))
                     course['startTime'] = (start_time - datetime(1, 1, 1)).seconds * 1000
@@ -133,3 +138,4 @@ def list_terms(soup: BeautifulSoup) -> Dict[str, str]:
 if __name__ == '__main__':
     classes = get_course_data()
     print(json.dumps(classes))
+
