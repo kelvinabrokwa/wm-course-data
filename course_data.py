@@ -42,6 +42,7 @@ def get_course_data() -> Dict[str, Any]:
                 course['MEET DAYS'] = list(filter(lambda x: x.strip(), list(meet_days)))
                 course['CRSE ATTR'] = list(map(lambda x: x.strip(), course[' CRSE ATTR'].split(',')))
                 del course[' CRSE ATTR']
+                course['MEET TIMES'] = meet_time.strip()
                 if meet_time.strip():
                     start, end = meet_time.split('-')
                     start_time = datetime(1, 1, 1, int(start[:2]), int(start[2:]))
