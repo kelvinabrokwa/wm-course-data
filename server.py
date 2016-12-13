@@ -17,7 +17,7 @@ Compress(app)
 
 
 # Redis
-r = redis.from_url(os.environ.get("REDIS_URL"))
+r = redis.from_url(os.environ.get('REDIS_URL'))
 
 if r.get('courses') is None:
     print('Fetching courses...')

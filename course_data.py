@@ -18,58 +18,84 @@ def get_course_data() -> Dict[str, Any]:
     home_soup = BeautifulSoup(r.text, 'html.parser')
     terms = list_terms(home_soup)
     out = {}
+
     for term_name, term_code in terms.items():
         print('fetching term: {}'.format(term_name), file=sys.stderr)
         print('---------------------------', file=sys.stderr)
+
         out[term_name] = {}
         subjects = list_subjects(home_soup)
+
         for subject in subjects:
             print(subject['subject_name'], file=sys.stderr)
+
             out[term_name][subject['subject_name']] = {}
+
             url = course_list_url.format(term_code=term_code, subject=subject['subject_id'])
+
             r = requests.get(url)
+
             soup = BeautifulSoup(normalize_markup(r.text), 'html.parser')
             table = find_result_table(soup)
             columns = get_column_names(table)
             courses = parse_table(table, columns)
+
+            # parse subject
             for course in courses:
                 course['department'] = subject['subject_name']
-                meet_days_time = course[' MEET DAY:TIME'].split(':')
-                if len(meet_days_time) == 2:
-                    meet_days, meet_time = meet_days_time
-                else:
-                    meet_days, meet_time = '', ''
-                course['MEET DAYS'] = list(filter(lambda x: x.strip(), list(meet_days)))
+
+                # meetings is an array of dicts like
+                #   [ { 'M': [34200000, 39000000] }, { 'W': [34200000, 39000000] }, ... } ]
+                course['meetings'] = []
+
+                # parse meeting days and times
+                for meet_day_time in course[' MEET DAY:TIME'].split(' '):
+                    if not meet_day_time.strip():
+                        continue
+                    days, time = meet_day_time.split(':')
+                    for day in days:
+                        start, end = time.split('-')
+                        course['meetings'].append({
+                            'day': day,
+                            'time': [get_time(start), get_time(end)]
+                        })
+
+                del course[' MEET DAY:TIME']
+
+                # parse attributes
                 course['CRSE ATTR'] = list(map(lambda x: x.strip(), course[' CRSE ATTR'].split(',')))
+
                 del course[' CRSE ATTR']
-                course['MEET TIMES'] = meet_time.strip()
-                if meet_time.strip():
-                    start, end = meet_time.split('-')
-                    start_time = datetime(1, 1, 1, int(start[:2]), int(start[2:]))
-                    end_time = datetime(1, 1, 1, int(end[:2]), int(end[2:]))
-                    course['startTime'] = (start_time - datetime(1, 1, 1)).seconds * 1000
-                    course['endTime'] = (end_time - datetime(1, 1, 1)).seconds * 1000
+
+                # parse department, level, and section
                 subj, level, section, _ = course['COURSE ID'].split(' ')
                 course['dept'] = subj
                 course['level'] = level
                 course['section'] = section
+
+                del course['COURSE ID']
+
                 if level in out[term_name][subject['subject_name']]:
-                    # some sections have multiple entries in the table
-                    # due to irregular meet times or class lengths
-                    # whenever we come across such an entry,
-                    # add it into an `other_meetings` array
-                    if section in out[term_name][subject['subject_name']][level]:
-                        if 'other_meetings' in out[term_name][subject['subject_name']][level][section]:
-                            out[term_name][subject['subject_name']][level][section]['other_meetings'].append(course)
-                        else:
-                            out[term_name][subject['subject_name']][level][section]['other_meetings'] = [course]
-                    else:
-                        out[term_name][subject['subject_name']][level][section] = course
+                    out[term_name][subject['subject_name']][level][section] = course
                 else:
                     out[term_name][subject['subject_name']][level] = {section: course}
+
     return out
 
 
+'''
+Given a time in a string like `2150` return the number
+of seconds since midnight
+'''
+def get_time(time: str) -> int:
+    t = datetime(1, 1, 1, int(time[:2]), int(time[2:]))
+    return (t - datetime(1, 1, 1)).seconds * 1000
+
+
+'''
+Make W&M HTML into real HTML
+add opening tags and what not
+'''
 def normalize_markup(html: str) -> str:
     html = re.sub(r'<tbody>\s*<td>', '<tbody><tr><td>', html)
     html = re.sub(r'</tr>\s*<td>', '</tr><tr><td>', html)
