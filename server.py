@@ -4,7 +4,7 @@ sys.path.append('.')
 import os
 import json
 import redis
-from flask import Flask
+from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_compress import Compress
 from course_data import get_course_data
@@ -26,4 +26,4 @@ if r.get('courses') is None:
 @app.route('/courses')
 def courses():
     # Todo: check for data staleness
-    return r.get('courses')
+    return jsonify(**json.loads(r.get('courses').decode('utf-8')))
