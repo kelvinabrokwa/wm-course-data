@@ -23,7 +23,9 @@ sudo make install
 
 - Redis
 
-Make sure to set the `REDIS_URL` environment variable 
+Make sure to set the `REDIS_URL` environment variable
+
+- gunicorn
 
 ### Usage
 
