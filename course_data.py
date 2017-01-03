@@ -80,7 +80,7 @@ def get_course_data() -> Dict[str, Any]:
                 else:
                     out[term_name][subject['subject_name']][level] = {section: course}
 
-    return out
+    return out, terms
 
 
 '''
@@ -163,6 +163,6 @@ def list_terms(soup: BeautifulSoup) -> Dict[str, str]:
 
 
 if __name__ == '__main__':
-    classes = get_course_data()
-    print(json.dumps(classes))
+    courses, terms = get_course_data()
+    print(json.dumps(courses))
 

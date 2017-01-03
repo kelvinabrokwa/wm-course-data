@@ -26,18 +26,42 @@ r = redis.from_url(os.environ.get('REDIS_URL'))
 
 if r.get('courses') is None:
     print('Fetching courses...')
-    r.set('courses', json.dumps(get_course_data()))
+    courses, terms = get_course_data()
+    r.set('courses', json.dumps(courses))
+    r.set('terms', json.dumps(terms))
+
+c = None
+t = None
 
 
 @app.route('/courses')
 def courses():
     # Todo: check for data staleness
-    return jsonify(**json.loads(r.get('courses').decode('utf-8')))
+    global c
+    if c is None:
+        # cache courses in memory
+        c = json.loads(r.get('courses').decode('utf-8'))
+    return jsonify(**c)
+
+
+@app.route('/terms')
+def terms():
+    global t
+    if t is None:
+        t = json.loads(r.get('terms').decode('utf-8'))
+    return jsonify(**t)
 
 
 @app.route('/geocode/<semester>/<crn>')
 def geocode_section(semester, crn):
-    req = requests.get('https://courselist.wm.edu/courselist/courseinfo/addInfo?fterm={term}&fcrn={crn}'.format(term=semester, crn=crn))
+    global t
+    if t is None:
+        t = json.loads(r.get('terms').decode('utf-8'))
+
+    term_code = t[semester]
+
+    req = requests.get('https://courselist.wm.edu/courselist/' +
+            'courseinfo/addInfo?fterm={term}&fcrn={crn}'.format(term=term_code, crn=crn))
     soup = BeautifulSoup(req.text, 'html.parser')
     tables = soup.find_all('table')
 
